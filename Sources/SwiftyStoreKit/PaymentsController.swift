@@ -104,6 +104,18 @@ class PaymentsController: TransactionController {
             return true
         }
 
+        if transactionState == .deferred {
+            let purchase = PurchaseDetails(productId: transactionProductIdentifier, quantity: transaction.payment.quantity, product: payment.product, transaction: transaction, originalTransaction: transaction.original, needsFinishTransaction: !payment.atomically)
+
+            payment.callback(.purchased(purchase: purchase))
+
+            if payment.atomically {
+              paymentQueue.finishTransaction(transaction)
+            }
+            payments.remove(at: paymentIndex)
+            return true
+        }
+
         if transactionState == .restored {
             print("Unexpected restored transaction for payment \(transactionProductIdentifier)")
 
